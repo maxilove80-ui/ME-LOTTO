@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ht">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#060610">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ME LOTTO">
+<title>ME LOTTO — Konekte</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="css/shared.css">
+<style>
+  body {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255,165,0,0.15), transparent),
+      var(--darker);
+  }
+
+  .login-wrap { width: 100%; max-width: 400px; }
+
+  .logo-block { text-align: center; margin-bottom: 40px; }
+  .logo {
+    font-family: 'Black Ops One', cursive;
+    font-size: 3.5rem;
+    background: linear-gradient(135deg, #FFD700, #FF8C00, #FF2D55);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 30px rgba(255,140,0,0.5));
+    animation: pulse-logo 3s ease-in-out infinite;
+    line-height: 1;
+  }
+  @keyframes pulse-logo {
+    0%,100% { filter: drop-shadow(0 0 20px rgba(255,140,0,0.3)); }
+    50%      { filter: drop-shadow(0 0 45px rgba(255,215,0,0.6)); }
+  }
+  .logo-sub {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.55rem; letter-spacing: 6px;
+    color: var(--muted); margin-top: 8px;
+  }
+  .logo-balls {
+    display: flex; justify-content: center; gap: 8px; margin-top: 16px;
+  }
+
+  .login-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px 24px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+
+  .login-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem; letter-spacing: 3px;
+    color: var(--muted); text-align: center;
+    margin-bottom: 24px; text-transform: uppercase;
+  }
+
+  .role-selector {
+    display: flex; gap: 8px; margin-bottom: 22px;
+  }
+  .role-btn {
+    flex: 1; padding: 10px;
+    border-radius: 10px; border: 1px solid var(--border2);
+    background: transparent; color: var(--muted);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem; letter-spacing: 2px;
+    cursor: pointer; transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .role-btn.active {
+    border-color: var(--gold); color: var(--gold);
+    background: rgba(255,215,0,0.08);
+  }
+
+  .forgot-link {
+    display: block; text-align: center;
+    font-size: 0.8rem; color: var(--muted);
+    margin-top: 14px; cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    transition: color 0.2s;
+  }
+  .forgot-link:hover { color: var(--gold); }
+
+  .version {
+    text-align: center; margin-top: 28px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.5rem; letter-spacing: 2px; color: var(--border2);
+  }
+</style>
+</head>
+<body>
+<div class="login-wrap fade-in">
+
+  <div class="logo-block">
+    <div class="logo">ME LOTTO</div>
+    <div class="logo-sub">Sistèm Jesyon Tiraj</div>
+    <div class="logo-balls">
+      <div class="ball ball-gold">3</div>
+      <div class="ball ball-red">7</div>
+      <div class="ball ball-blue">1</div>
+      <div class="ball ball-green">9</div>
+    </div>
+  </div>
+
+  <div class="login-card">
+    <div class="login-title">Konekte nan Kont Ou</div>
+
+    <div class="role-selector">
+      <button class="role-btn active" id="btnAdmin" onclick="setRole('admin')">
+        👑 Admin
+      </button>
+      <button class="role-btn" id="btnAgent" onclick="setRole('agent')">
+        🏪 Ajan
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Imel</label>
+      <input type="email" id="emailInput" class="form-control"
+        placeholder="ou@email.com" autocomplete="email">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Modpas</label>
+      <input type="password" id="passInput" class="form-control"
+        placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <button class="btn btn-gold btn-full mt-2" onclick="doLogin()" id="loginBtn">
+      Konekte
+    </button>
+
+    <span class="forgot-link" onclick="doReset()">Bliye modpas? Reinisyalize</span>
+  </div>
+
+  <div class="version">ME LOTTO v1.0 · Firebase PWA</div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script>
+  let selectedRole = 'admin';
+
+  function setRole(r) {
+    selectedRole = r;
+    document.getElementById('btnAdmin').classList.toggle('active', r === 'admin');
+    document.getElementById('btnAgent').classList.toggle('active', r === 'agent');
+  }
+
+  // Enter key support
+  ['emailInput','passInput'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  });
+
+  async function doLogin() {
+    const email = document.getElementById('emailInput').value.trim();
+    const pass  = document.getElementById('passInput').value;
+    const btn   = document.getElementById('loginBtn');
+
+    if (!email || !pass) { showToast('Ranpli tout chan yo', 'warn'); return; }
+
+    btn.disabled = true;
+    btn.textContent = '⟳ Ap konekte...';
+
+    try {
+      const cred = await auth.signInWithEmailAndPassword(email, pass);
+      const uid = cred.user.uid;
+
+      // Verify role matches
+      const userDoc = await db.collection('users').doc(uid).get();
+      if (!userDoc.exists) throw new Error('Kont pa jwenn');
+
+      const userData = userDoc.data();
+      if (userData.role !== selectedRole && userData.role !== 'admin') {
+        throw new Error('Wòl ou pa kòrèk pou aksè sa a');
+      }
+
+      showToast('Koneksyon reyisi!', 'success');
+
+      // Redirect based on role
+      setTimeout(() => {
+        if (userData.role === 'admin') {
+          window.location.href = 'pages/admin.html';
+        } else {
+          window.location.href = 'pages/agent.html';
+        }
+      }, 800);
+
+    } catch (err) {
+      let msg = 'Koneksyon echwe';
+      if (err.code === 'auth/user-not-found')     msg = 'Imel sa pa egziste';
+      if (err.code === 'auth/wrong-password')      msg = 'Modpas enkòrèk';
+      if (err.code === 'auth/invalid-email')       msg = 'Imel pa valid';
+      if (err.code === 'auth/too-many-requests')   msg = 'Twòp eseye. Tann yon ti moman';
+      if (err.message) msg = err.message;
+      showToast(msg, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Konekte';
+    }
+  }
+
+  async function doReset() {
+    const email = document.getElementById('emailInput').value.trim();
+    if (!email) { showToast('Mete imel ou anpremye', 'warn'); return; }
+    try {
+      await auth.sendPasswordResetEmail(email);
+      showToast('Imel reinisyalizasyon voye!', 'success');
+    } catch(e) {
+      showToast('Imel pa jwenn', 'error');
+    }
+  }
+
+  // Auto-redirect if already logged in
+  auth.onAuthStateChanged(async user => {
+    if (user) {
+      const role = await getUserRole(user.uid);
+      if (role === 'admin') window.location.href = 'pages/admin.html';
+      else if (role === 'agent') window.location.href = 'pages/agent.html';
+    }
+  });
+</script>
+</body>
+</html>
