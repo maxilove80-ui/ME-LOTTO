@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ht">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#060610">
+<title>ME LOTTO — Admin</title>
+<link rel="stylesheet" href="../css/shared.css">
+<style>
+  body { padding-bottom: 80px; }
+
+  /* TOP BAR */
+  .topbar {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-logo {
+    font-family: 'Black Ops One', cursive;
+    font-size: 1.4rem;
+    background: linear-gradient(135deg, #FFD700, #FF8C00);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .admin-badge {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.55rem; letter-spacing: 2px;
+    color: var(--gold); background: rgba(255,215,0,0.1);
+    border: 1px solid rgba(255,215,0,0.25);
+    padding: 4px 10px; border-radius: 20px;
+  }
+
+  /* TABS */
+  .tabs-bar {
+    display: flex; overflow-x: auto; gap: 0;
+    background: var(--card); border-bottom: 1px solid var(--border);
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .tabs-bar::-webkit-scrollbar { display: none; }
+  .tab {
+    flex-shrink: 0; padding: 12px 20px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem; letter-spacing: 2px;
+    color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    text-transform: uppercase; white-space: nowrap;
+    transition: all 0.2s; background: none; border-top: none;
+    border-left: none; border-right: none;
+  }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* CONTENT */
+  .content { padding: 16px; max-width: 900px; margin: 0 auto; }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* STAT CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px; margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px;
+  }
+  .stat-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.55rem; letter-spacing: 2px;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.5rem; font-weight: 900;
+    color: var(--gold);
+  }
+  .stat-sub { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem; letter-spacing: 3px;
+    color: var(--muted); text-transform: uppercase;
+    margin-bottom: 14px; margin-top: 4px;
+  }
+
+  /* LIMIT GRID */
+  .limit-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+  }
+  .limit-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 10px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .limit-item:focus-within { border-color: var(--gold); }
+  .limit-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem; font-weight: 900;
+    color: var(--text); margin-bottom: 8px;
+  }
+  .limit-input {
+    width: 100%; background: var(--card2);
+    border: 1px solid var(--border2);
+    border-radius: 8px; padding: 7px 6px;
+    color: var(--gold); font-family: 'Orbitron', monospace;
+    font-size: 0.85rem; font-weight: 700;
+    text-align: center; outline: none;
+    transition: border-color 0.2s;
+  }
+  .limit-input:focus { border-color: var(--gold); }
+
+  /* AGENT LIST */
+  .agent-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px; margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .agent-header {
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .agent-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 1px;
+  }
+  .agent-meta { font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
+  .agent-actions { display: flex; gap: 8px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    z-index: 200; display: none;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 20px; padding: 24px;
+    width: 100%; max-width: 440px;
+    animation: fadeIn 0.25s ease;
+  }
+  .modal-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem; letter-spacing: 3px;
+    color: var(--gold); margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+  /* PICK TOGGLE */
+  .pick-toggle {
+    display: flex; gap: 8px; margin-bottom: 20px;
+  }
+  .pick-btn {
+    flex: 1; padding: 10px;
+    border-radius: 10px; border: 1px solid var(--border2);
+    background: transparent; color: var(--muted);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem; letter-spacing: 2px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .pick-btn.active {
+    border-color: var(--gold); color: var(--gold);
+    background: rgba(255,215,0,0.08);
+  }
+
+  /* VANT TABLE */
+  .vant-filters {
+    display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .filter-select {
+    background: var(--card2); border: 1px solid var(--border2);
+    border-radius: 8px; color: var(--text);
+    padding: 8px 12px; font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem; outline: none; cursor: pointer;
+  }
+
+  @media (max-width: 360px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .limit-controls { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">ME LOTTO</div>
+  <div class="topbar-right">
+    <span class="admin-badge">👑 ADMIN</span>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()">⏻</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <button class="tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+  <button class="tab" onclick="showTab('limits')">🎯 Limit Vant</button>
+  <button class="tab" onclick="showTab('agents')">🏪 Ajan</button>
+  <button class="tab" onclick="showTab('vant')">📋 Vant</button>
+  <button class="tab" onclick="showTab('resultats')">🎰 Tiraj</button>
+</div>
+
+<!-- ======================== DASHBOARD ======================== -->
+<div class="content">
+  <div id="sec-dashboard" class="section active fade-in">
+    <br>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Vant Jodi</div>
+        <div class="stat-value" id="statVantJodi">—</div>
+        <div class="stat-sub">Toure eta yo</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Nòmb Ajan Aktif</div>
+        <div class="stat-value" id="statAjanAktif">—</div>
+        <div class="stat-sub">Kont aktif</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pick 3 Jodi</div>
+        <div class="stat-value text-blue" id="statPick3">—</div>
+        <div class="stat-sub">Tiket</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pick 4 Jodi</div>
+        <div class="stat-value text-green" id="statPick4">—</div>
+        <div class="stat-sub">Tiket</div>
+      </div>
+    </div>
+
+    <div class="section-title">Dènye Vant</div>
+    <div class="card">
+      <div class="table-wrap">
+        <table id="recentTable">
+          <thead>
+            <tr>
+              <th>Ajan</th><th>Nimewo</th><th>Tip</th><th>Eta</th><th>Tiraj</th><th>Dat</th>
+            </tr>
+          </thead>
+          <tbody id="recentBody">
+            <tr><td colspan="6" class="text-center text-muted" style="padding:20px">Ap chaje...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== LIMIT VANT ======================== -->
+  <div id="sec-limits" class="section fade-in">
+    <br>
+    <div class="pick-toggle">
+      <button class="pick-btn active" id="pickBtn3" onclick="setLimitPick(3)">PICK 3</button>
+      <button class="pick-btn" id="pickBtn4" onclick="setLimitPick(4)">PICK 4</button>
+    </div>
+
+    <div class="section-title" id="limitTitle">Limit pou chak nimewo — PICK 3 (000–999)</div>
+
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-outline btn-sm" onclick="setAllLimits()">Mete tout nan menm limit</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetAllLimits()">Retire tout limit</button>
+    </div>
+
+    <!-- Global limit setter -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-body" style="display:flex;gap:12px;align-items:flex-end">
+        <div class="form-group" style="flex:1;margin:0">
+          <label class="form-label">Limit global pou tout nimewo</label>
+          <input type="number" id="globalLimitInput" class="form-control"
+            placeholder="ex: 100" min="0">
+        </div>
+        <button class="btn btn-gold" style="flex-shrink:0" onclick="applyGlobalLimit()">Aplike</button>
+      </div>
+    </div>
+
+    <div class="limit-controls" id="limitGrid">
+      <!-- Generated by JS -->
+    </div>
+
+    <div style="margin-top:20px">
+      <button class="btn btn-gold btn-full" onclick="saveLimits()">
+        💾 Sove tout Limit yo
+      </button>
+    </div>
+  </div>
+
+  <!-- ======================== AJAN ======================== -->
+  <div id="sec-agents" class="section fade-in">
+    <br>
+    <button class="btn btn-gold btn-full mb-2" onclick="openNewAgent()">
+      + Ajoute Ajan Nouvo
+    </button>
+
+    <div id="agentsList">
+      <div class="text-center text-muted" style="padding:30px">Ap chaje ajan yo...</div>
+    </div>
+  </div>
+
+  <!-- ======================== VANT ======================== -->
+  <div id="sec-vant" class="section fade-in">
+    <br>
+    <div class="vant-filters">
+      <select class="filter-select" id="filterAjan" onchange="loadAllVant()">
+        <option value="">Tout Ajan</option>
+      </select>
+      <select class="filter-select" id="filterEta" onchange="loadAllVant()">
+        <option value="">Tout Eta</option>
+        <option value="tennessee">Tennessee</option>
+        <option value="georgia">Georgia</option>
+        <option value="florida">Florida</option>
+        <option value="new-york">New York</option>
+      </select>
+      <select class="filter-select" id="filterPick" onchange="loadAllVant()">
+        <option value="">Pick 3 & 4</option>
+        <option value="3">Pick 3</option>
+        <option value="4">Pick 4</option>
+      </select>
+      <input type="date" class="filter-select" id="filterDate" onchange="loadAllVant()">
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Ajan</th><th>Nimewo</th><th>Tip</th><th>Eta</th><th>Tiraj</th><th>Mitan $</th><th>Dat</th><th>Aksyon</th>
+            </tr>
+          </thead>
+          <tbody id="vantBody">
+            <tr><td colspan="8" class="text-center text-muted" style="padding:20px">Ap chaje...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== TIRAJ / RESULTATS ======================== -->
+  <div id="sec-resultats" class="section fade-in">
+    <br>
+    <!-- Embed the lottery results mini-view -->
+    <div class="section-title">Dènye Rezilta Tiraj</div>
+    <div id="tirajContent">
+      <div class="text-center text-muted" style="padding:30px">
+        Klike "Chaje Rezilta" pou wè dènye nimewo yo
+      </div>
+    </div>
+    <button class="btn btn-gold btn-full mt-2" onclick="loadTiraj()">
+      🎰 Chaje Rezilta Tiraj
+    </button>
+  </div>
+</div><!-- /content -->
+
+<!-- MODAL: Ajoute/Edite Ajan -->
+<div class="modal-overlay" id="modalAgent">
+  <div class="modal">
+    <div class="modal-title" id="modalAgentTitle">Ajan Nouvo</div>
+    <div class="form-group">
+      <label class="form-label">Non Konplè</label>
+      <input type="text" id="agentName" class="form-control" placeholder="Jan Labèl">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Imel</label>
+      <input type="email" id="agentEmail" class="form-control" placeholder="ajan@email.com">
+    </div>
+    <div class="form-group" id="passField">
+      <label class="form-label">Modpas Inisyal</label>
+      <input type="password" id="agentPass" class="form-control" placeholder="Min 6 karaktè">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Non Pwen Vant</label>
+      <input type="text" id="agentShop" class="form-control" placeholder="Boutik, Ri, Vil...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Limit vant jounen (HTG) — 0 = san limit</label>
+      <input type="number" id="agentDayLimit" class="form-control" placeholder="ex: 5000" min="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modalAgent')">Anile</button>
+      <button class="btn btn-gold" style="flex:1" onclick="saveAgent()" id="saveAgentBtn">Sove</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Konfime Sipresyon -->
+<div class="modal-overlay" id="modalDelete">
+  <div class="modal">
+    <div class="modal-title">⚠️ Konfime Sipresyon</div>
+    <p style="color:var(--muted);font-size:0.9rem;margin-bottom:4px">
+      Ou vle siprime ajan <strong id="deleteAgentName" style="color:var(--red)"></strong>?
+    </p>
+    <p style="font-size:0.8rem;color:var(--muted)">Aksyon sa pa ka defèt.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('modalDelete')">Non</button>
+      <button class="btn btn-red" style="flex:1" onclick="confirmDelete()">Wi, Siprime</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script>
+// ===== AUTH GUARD =====
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.href = '../index.html'; return; }
+  const role = await getUserRole(user.uid);
+  if (role !== 'admin') { window.location.href = '../index.html'; return; }
+  initAdmin(user);
+});
+
+async function initAdmin(user) {
+  loadDashboard();
+  loadAgents();
+  renderLimitGrid(3);
+  loadLimitsFromDB(3);
+  loadAllVant();
+  // Set today's date filter
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('filterDate').value = today;
+}
+
+// ===== TABS =====
+function showTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ===== LOGOUT =====
+async function doLogout() {
+  await auth.signOut();
+  window.location.href = '../index.html';
+}
+
+// ===== DASHBOARD =====
+async function loadDashboard() {
+  try {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const snap = await db.collection('vant')
+      .where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(today))
+      .orderBy('createdAt','desc').limit(50).get();
+
+    let p3=0, p4=0;
+    const rows = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      if (d.pick == 3) p3++;
+      if (d.pick == 4) p4++;
+      rows.push(d);
+    });
+
+    document.getElementById('statVantJodi').textContent = snap.size;
+    document.getElementById('statPick3').textContent = p3;
+    document.getElementById('statPick4').textContent = p4;
+
+    // Agents
+    const aSnap = await db.collection('users').where('role','==','agent').where('active','==',true).get();
+    document.getElementById('statAjanAktif').textContent = aSnap.size;
+
+    // Recent table
+    const tbody = document.getElementById('recentBody');
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:20px">Pa gen vant jodi</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.slice(0,20).map(d => `
+      <tr>
+        <td>${d.agentName || '—'}</td>
+        <td><strong style="font-family:monospace;color:var(--gold)">${d.numeros}</strong></td>
+        <td><span class="badge badge-blue">Pick ${d.pick}</span></td>
+        <td>${stateLabel(d.state)}</td>
+        <td><span class="badge badge-muted">${tirajLabel(d.tiraj)}</span></td>
+        <td style="color:var(--muted);font-size:0.8rem">${formatDate(d.createdAt)}</td>
+      </tr>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+// ===== LIMITS =====
+let currentLimitPick = 3;
+let limitsData = {}; // { '3': {'000': 100, ...}, '4': {'0000': 100, ...} }
+
+function setLimitPick(n) {
+  currentLimitPick = n;
+  document.getElementById('pickBtn3').classList.toggle('active', n===3);
+  document.getElementById('pickBtn4').classList.toggle('active', n===4);
+  document.getElementById('limitTitle').textContent =
+    `Limit pou chak nimewo — PICK ${n} (${n===3?'000–999':'0000–9999'})`;
+  renderLimitGrid(n);
+  loadLimitsFromDB(n);
+}
+
+function renderLimitGrid(n) {
+  const grid = document.getElementById('limitGrid');
+  const count = n === 3 ? 1000 : 10000;
+  // For 10000 items, use virtual scroll friendly approach — render 1000 at a time
+  const displayCount = n === 3 ? 1000 : 1000; // show first 1000 for pick4
+
+  let html = '';
+  for (let i = 0; i < displayCount; i++) {
+    const num = String(i).padStart(n, '0');
+    const val = (limitsData[n] && limitsData[n][num]) || '';
+    html += `
+      <div class="limit-item">
+        <div class="limit-num">${num}</div>
+        <input type="number" class="limit-input" id="lim_${num}"
+          value="${val}" placeholder="∞" min="0"
+          data-num="${num}">
+      </div>`;
+  }
+
+  if (n === 4) {
+    html += `<div style="grid-column:1/-1;text-align:center;padding:12px;color:var(--muted);font-size:0.7rem;font-family:'Orbitron',monospace">
+      ... 0000–0999 afiche. Itilize limit global pou tout 10,000 nimewo yo.
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+async function loadLimitsFromDB(n) {
+  try {
+    const doc = await db.collection('config').doc(`limits_pick${n}`).get();
+    if (doc.exists) {
+      limitsData[n] = doc.data().limits || {};
+      // Update inputs
+      Object.entries(limitsData[n]).forEach(([num, val]) => {
+        const el = document.getElementById(`lim_${num}`);
+        if (el) el.value = val;
+      });
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function saveLimits() {
+  const n = currentLimitPick;
+  const limits = {};
+  document.querySelectorAll('.limit-input').forEach(inp => {
+    const v = parseInt(inp.value);
+    if (!isNaN(v) && v > 0) limits[inp.dataset.num] = v;
+  });
+
+  // Also save any limits from DB that are outside the rendered range
+  if (limitsData[n]) {
+    Object.entries(limitsData[n]).forEach(([num, val]) => {
+      if (!(num in limits) && !document.getElementById(`lim_${num}`)) {
+        limits[num] = val;
+      }
+    });
+  }
+
+  try {
+    await db.collection('config').doc(`limits_pick${n}`).set({ limits, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    limitsData[n] = limits;
+    showToast(`Limit Pick ${n} sove!`, 'success');
+  } catch(e) {
+    showToast('Erè: ' + e.message, 'error');
+  }
+}
+
+function applyGlobalLimit() {
+  const val = document.getElementById('globalLimitInput').value;
+  if (!val) { showToast('Mete yon valè', 'warn'); return; }
+  document.querySelectorAll('.limit-input').forEach(inp => inp.value = val);
+  showToast(`Tout nimewo mete nan ${val}`, 'info');
+}
+
+function setAllLimits() { applyGlobalLimit(); }
+
+function resetAllLimits() {
+  document.querySelectorAll('.limit-input').forEach(inp => inp.value = '');
+  showToast('Tout limit efase (pa sove ankò)', 'warn');
+}
+
+// ===== AGENTS =====
+let editingAgentId = null;
+let deleteAgentId = null;
+
+async function loadAgents() {
+  const container = document.getElementById('agentsList');
+  try {
+    const snap = await db.collection('users').where('role','==','agent').orderBy('name').get();
+    if (snap.empty) {
+      container.innerHTML = '<div class="text-center text-muted" style="padding:30px">Pa gen ajan ankò</div>';
+      return;
+    }
+
+    // Populate filter
+    const sel = document.getElementById('filterAjan');
+    sel.innerHTML = '<option value="">Tout Ajan</option>';
+    snap.forEach(doc => {
+      const d = doc.data();
+      sel.innerHTML += `<option value="${doc.id}">${d.name}</option>`;
+    });
+
+    container.innerHTML = snap.docs.map(doc => {
+      const d = doc.data();
+      return `
+        <div class="agent-card">
+          <div class="agent-header">
+            <div>
+              <div class="agent-name">${d.name}</div>
+              <div class="agent-meta">${d.shopName || ''} · ${d.email}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+              <span class="badge ${d.active ? 'badge-green' : 'badge-red'}">${d.active ? 'Aktif' : 'Dezaktive'}</span>
+              <div class="agent-actions">
+                <button class="btn btn-outline btn-sm" onclick="openEditAgent('${doc.id}')">✏️</button>
+                <button class="btn btn-ghost btn-sm" onclick="toggleAgent('${doc.id}', ${d.active})">${d.active ? '⏸' : '▶'}</button>
+                <button class="btn btn-red btn-sm" onclick="openDelete('${doc.id}','${d.name}')">🗑</button>
+              </div>
+            </div>
+          </div>
+          <div style="padding:10px 16px;display:flex;gap:16px;flex-wrap:wrap">
+            <div>
+              <div style="font-size:0.6rem;font-family:'Orbitron',monospace;color:var(--muted);letter-spacing:2px">LIMIT JOUNEN</div>
+              <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:0.9rem">${d.dayLimit ? 'HTG ' + d.dayLimit.toLocaleString() : '∞ San limit'}</div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = `<div class="text-center text-muted">Erè: ${e.message}</div>`;
+  }
+}
+
+function openNewAgent() {
+  editingAgentId = null;
+  document.getElementById('modalAgentTitle').textContent = '+ Ajan Nouvo';
+  document.getElementById('agentName').value = '';
+  document.getElementById('agentEmail').value = '';
+  document.getElementById('agentPass').value = '';
+  document.getElementById('agentShop').value = '';
+  document.getElementById('agentDayLimit').value = '';
+  document.getElementById('passField').style.display = 'block';
+  document.getElementById('modalAgent').classList.add('open');
+}
+
+async function openEditAgent(uid) {
+  editingAgentId = uid;
+  document.getElementById('modalAgentTitle').textContent = '✏️ Edite Ajan';
+  document.getElementById('passField').style.display = 'none';
+  try {
+    const doc = await db.collection('users').doc(uid).get();
+    const d = doc.data();
+    document.getElementById('agentName').value = d.name || '';
+    document.getElementById('agentEmail').value = d.email || '';
+    document.getElementById('agentShop').value = d.shopName || '';
+    document.getElementById('agentDayLimit').value = d.dayLimit || '';
+    document.getElementById('modalAgent').classList.add('open');
+  } catch(e) { showToast('Erè', 'error'); }
+}
+
+async function saveAgent() {
+  const name  = document.getElementById('agentName').value.trim();
+  const email = document.getElementById('agentEmail').value.trim();
+  const pass  = document.getElementById('agentPass').value;
+  const shop  = document.getElementById('agentShop').value.trim();
+  const limit = parseInt(document.getElementById('agentDayLimit').value) || 0;
+  const btn   = document.getElementById('saveAgentBtn');
+
+  if (!name || !email) { showToast('Non ak imel obligatwa', 'warn'); return; }
+
+  btn.disabled = true; btn.textContent = '⟳ Ap sove...';
+
+  try {
+    if (editingAgentId) {
+      // Update existing
+      await db.collection('users').doc(editingAgentId).update({
+        name, shopName: shop, dayLimit: limit,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast('Ajan mizajou!', 'success');
+    } else {
+      // Create via Cloud Function (or direct if admin SDK)
+      // We use a Firestore pending_users collection that a Cloud Function processes
+      if (!pass || pass.length < 6) { showToast('Modpas min 6 karaktè', 'warn'); btn.disabled=false; btn.textContent='Sove'; return; }
+      await db.collection('pending_agents').add({
+        name, email, pass, shopName: shop, dayLimit: limit,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast('Demann kreye kont voye!', 'success');
+    }
+    closeModal('modalAgent');
+    setTimeout(loadAgents, 800);
+  } catch(e) {
+    showToast('Erè: ' + e.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = 'Sove';
+}
+
+async function toggleAgent(uid, currentActive) {
+  try {
+    await db.collection('users').doc(uid).update({ active: !currentActive });
+    showToast(currentActive ? 'Ajan dezaktive' : 'Ajan reaktive', 'info');
+    loadAgents();
+  } catch(e) { showToast('Erè', 'error'); }
+}
+
+function openDelete(uid, name) {
+  deleteAgentId = uid;
+  document.getElementById('deleteAgentName').textContent = name;
+  document.getElementById('modalDelete').classList.add('open');
+}
+
+async function confirmDelete() {
+  if (!deleteAgentId) return;
+  try {
+    await db.collection('users').doc(deleteAgentId).update({ active: false, deleted: true });
+    showToast('Ajan siprime', 'success');
+    closeModal('modalDelete');
+    loadAgents();
+  } catch(e) { showToast('Erè', 'error'); }
+}
+
+// ===== VANT =====
+async function loadAllVant() {
+  const tbody = document.getElementById('vantBody');
+  tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:20px">Ap chaje...</td></tr>';
+
+  const filterAjan = document.getElementById('filterAjan').value;
+  const filterEta  = document.getElementById('filterEta').value;
+  const filterPick = document.getElementById('filterPick').value;
+  const filterDate = document.getElementById('filterDate').value;
+
+  try {
+    let q = db.collection('vant').orderBy('createdAt','desc').limit(100);
+
+    if (filterAjan) q = q.where('agentId', '==', filterAjan);
+    if (filterEta)  q = q.where('state', '==', filterEta);
+    if (filterPick) q = q.where('pick', '==', parseInt(filterPick));
+
+    if (filterDate) {
+      const d = new Date(filterDate); d.setHours(0,0,0,0);
+      const d2 = new Date(filterDate); d2.setHours(23,59,59,999);
+      q = q.where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(d))
+           .where('createdAt', '<=', firebase.firestore.Timestamp.fromDate(d2));
+    }
+
+    const snap = await q.get();
+    if (snap.empty) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:20px">Pa gen rezilta</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = snap.docs.map(doc => {
+      const d = doc.data();
+      return `<tr>
+        <td>${d.agentName||'—'}</td>
+        <td><strong style="font-family:monospace;color:var(--gold)">${d.numeros}</strong></td>
+        <td><span class="badge badge-blue">Pick ${d.pick}</span></td>
+        <td>${stateLabel(d.state)}</td>
+        <td><span class="badge badge-muted">${tirajLabel(d.tiraj)}</span></td>
+        <td style="color:var(--green)">HTG ${(d.montant||0).toLocaleString()}</td>
+        <td style="font-size:0.8rem;color:var(--muted)">${formatDate(d.createdAt)} ${formatTime(d.createdAt)}</td>
+        <td><button class="btn btn-red btn-sm" onclick="deleteVant('${doc.id}')">✕</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">Erè: ${e.message}</td></tr>`;
+  }
+}
+
+async function deleteVant(id) {
+  if (!confirm('Siprime vant sa?')) return;
+  await db.collection('vant').doc(id).delete();
+  showToast('Vant siprime', 'success');
+  loadAllVant();
+}
+
+// ===== TIRAJ =====
+async function loadTiraj() {
+  const container = document.getElementById('tirajContent');
+  container.innerHTML = '<div class="text-center" style="padding:20px"><span class="spin-anim">⟳</span> Ap chaje...</div>';
+
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 800,
+        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        system: "Return ONLY valid JSON, no markdown.",
+        messages: [{
+          role: "user",
+          content: `Get the latest Pick 3 and Pick 4 results for Tennessee (morning+evening), Georgia (midday+evening), Florida (midday+evening), New York (midday+evening). Return JSON: {"results":[{"state":"Tennessee","draw":"Morning","pick3":["1","2","3"],"pick4":["1","2","3","4"],"date":"YYYY-MM-DD"},...]}`
+        }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.filter(b=>b.type==='text').map(b=>b.text).join('') || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+
+    container.innerHTML = parsed.results.map(r => `
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <strong style="font-family:'Orbitron',monospace;font-size:0.8rem">${r.state}</strong>
+          <span class="badge badge-muted">${r.draw}</span>
+          <span style="margin-left:auto;font-size:0.75rem;color:var(--muted)">${r.date||''}</span>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <div style="font-size:0.6rem;font-family:'Orbitron',monospace;color:var(--muted);letter-spacing:2px;margin-bottom:8px">PICK 3</div>
+            <div style="display:flex;gap:8px">${(r.pick3||[]).map((n,i) => `<div class="ball ball-${['gold','blue','red'][i%3]}">${n}</div>`).join('')}</div>
+          </div>
+          <div>
+            <div style="font-size:0.6rem;font-family:'Orbitron',monospace;color:var(--muted);letter-spacing:2px;margin-bottom:8px">PICK 4</div>
+            <div style="display:flex;gap:8px">${(r.pick4||[]).map((n,i) => `<div class="ball ball-${['green','gold','blue','red'][i%4]}">${n}</div>`).join('')}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    container.innerHTML = `<div class="text-center text-muted" style="padding:20px">Erè chajman: ${e.message}</div>`;
+  }
+}
+
+// ===== HELPERS =====
+function stateLabel(s) {
+  return { 'tennessee':'🎸 TN','georgia':'🍑 GA','florida':'🌴 FL','new-york':'🗽 NY' }[s] || s;
+}
+function tirajLabel(t) {
+  return { 'morning':'Matin','midday':'Midi','evening':'Swa' }[t] || t;
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+</script>
+</body>
+</html>

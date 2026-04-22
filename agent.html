@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ht">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#060610">
+<title>ME LOTTO — Ajan</title>
+<link rel="stylesheet" href="../css/shared.css">
+<style>
+  body { padding-bottom: 80px; }
+
+  .topbar {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-logo {
+    font-family: 'Black Ops One', cursive; font-size: 1.4rem;
+    background: linear-gradient(135deg, #FFD700, #FF8C00);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .agent-info { text-align: right; }
+  .agent-info-name {
+    font-family: 'Orbitron', monospace; font-size: 0.7rem;
+    font-weight: 700; color: var(--text);
+  }
+  .agent-info-shop { font-size: 0.75rem; color: var(--muted); }
+
+  .tabs-bar {
+    display: flex; background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    flex: 1; padding: 12px 8px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.55rem; letter-spacing: 1.5px;
+    color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    text-transform: uppercase; text-align: center;
+    transition: all 0.2s; background: none;
+    border-top: none; border-left: none; border-right: none;
+  }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  .content { padding: 16px; max-width: 600px; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* LIMIT PROGRESS BAR */
+  .limit-bar-wrap {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px; margin-bottom: 16px;
+  }
+  .limit-bar-label {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .limit-bar-title {
+    font-family: 'Orbitron', monospace; font-size: 0.6rem;
+    letter-spacing: 2px; color: var(--muted);
+  }
+  .limit-bar-val {
+    font-family: 'Orbitron', monospace; font-size: 0.85rem;
+    font-weight: 700; color: var(--gold);
+  }
+  .progress-track {
+    height: 8px; background: var(--border);
+    border-radius: 4px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 0.6s ease;
+    background: linear-gradient(90deg, var(--green), var(--gold));
+  }
+  .progress-fill.warn { background: linear-gradient(90deg, var(--gold2), var(--warn)); }
+  .progress-fill.danger { background: linear-gradient(90deg, var(--warn), var(--danger)); }
+
+  /* FORM VANT */
+  .form-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px; margin-bottom: 14px;
+  }
+  .form-card-title {
+    font-family: 'Orbitron', monospace; font-size: 0.65rem;
+    letter-spacing: 2px; color: var(--gold); margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  /* Number input special */
+  .num-input {
+    font-family: 'Orbitron', monospace !important;
+    font-size: 1.8rem !important; font-weight: 900 !important;
+    text-align: center; letter-spacing: 8px;
+    color: var(--gold) !important;
+  }
+
+  /* Tiraj selector grid */
+  .tiraj-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-bottom: 4px;
+  }
+  .tiraj-option {
+    padding: 10px; border-radius: 10px;
+    border: 1px solid var(--border2);
+    background: transparent; color: var(--muted);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.6rem; letter-spacing: 1.5px;
+    cursor: pointer; transition: all 0.2s;
+    text-align: center; text-transform: uppercase;
+  }
+  .tiraj-option.active {
+    border-color: var(--gold); color: var(--gold);
+    background: rgba(255,215,0,0.08);
+  }
+  .tiraj-option:disabled { opacity: 0.35; pointer-events: none; }
+
+  /* State selector */
+  .state-grid {
+    display: grid; grid-template-columns: repeat(2,1fr);
+    gap: 8px; margin-bottom: 4px;
+  }
+  .state-option {
+    padding: 10px 8px; border-radius: 10px;
+    border: 1px solid var(--border2);
+    background: transparent; color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    text-align: center;
+  }
+  .state-option.active {
+    border-color: var(--blue); color: var(--blue);
+    background: rgba(0,200,255,0.08);
+  }
+
+  /* Pick toggle */
+  .pick-toggle { display: flex; gap: 8px; margin-bottom: 4px; }
+  .pick-btn {
+    flex: 1; padding: 12px; border-radius: 10px;
+    border: 1px solid var(--border2);
+    background: transparent; color: var(--muted);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem; letter-spacing: 2px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .pick-btn.active {
+    border-color: var(--gold); color: var(--gold);
+    background: rgba(255,215,0,0.08);
+  }
+
+  /* Limit warning */
+  .limit-warning {
+    background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3);
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 0.8rem; color: var(--danger);
+    margin-bottom: 12px; display: none;
+  }
+  .limit-warning.show { display: block; }
+
+  /* MY VANT */
+  .vant-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .vant-nums {
+    font-family: 'Orbitron', monospace; font-size: 1.1rem;
+    font-weight: 900; color: var(--gold); letter-spacing: 4px;
+  }
+  .vant-meta { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  /* TIRAJ SECTION */
+  .tiraj-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; margin-bottom: 12px; overflow: hidden;
+  }
+  .tiraj-card-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">ME LOTTO</div>
+  <div class="agent-info">
+    <div class="agent-info-name" id="agentNameTop">...</div>
+    <div class="agent-info-shop" id="agentShopTop"></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <button class="tab active" onclick="showTab('vant')">🎟 Nouvo Vant</button>
+  <button class="tab" onclick="showTab('myvant')">📋 Vant Mwen</button>
+  <button class="tab" onclick="showTab('tiraj')">🎰 Tiraj</button>
+  <button class="tab" onclick="doLogout()">⏻ Sòti</button>
+</div>
+
+<div class="content">
+
+  <!-- ===== NOUVO VANT ===== -->
+  <div id="sec-vant" class="section active fade-in">
+    <br>
+    <!-- Limit bar -->
+    <div class="limit-bar-wrap" id="limitBarWrap" style="display:none">
+      <div class="limit-bar-label">
+        <div class="limit-bar-title">Limit Jounen Ou</div>
+        <div class="limit-bar-val" id="limitBarVal">—</div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="limitBarFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Pick selector -->
+    <div class="form-card">
+      <div class="form-card-title">Tip Tiraj</div>
+      <div class="pick-toggle">
+        <button class="pick-btn active" id="pickBtn3" onclick="setPick(3)">PICK 3</button>
+        <button class="pick-btn" id="pickBtn4" onclick="setPick(4)">PICK 4</button>
+      </div>
+    </div>
+
+    <!-- State selector -->
+    <div class="form-card">
+      <div class="form-card-title">Chwazi Eta</div>
+      <div class="state-grid">
+        <button class="state-option active" onclick="setState('tennessee',this)">🎸 Tennessee</button>
+        <button class="state-option" onclick="setState('georgia',this)">🍑 Georgia</button>
+        <button class="state-option" onclick="setState('florida',this)">🌴 Florida</button>
+        <button class="state-option" onclick="setState('new-york',this)">🗽 New York</button>
+      </div>
+    </div>
+
+    <!-- Tiraj selector -->
+    <div class="form-card">
+      <div class="form-card-title">Tiraj</div>
+      <div class="tiraj-grid" id="tirajGrid">
+        <!-- Filled by JS based on state -->
+      </div>
+    </div>
+
+    <!-- Number entry -->
+    <div class="form-card">
+      <div class="form-card-title">Nimewo</div>
+      <input type="tel" id="numInput" class="form-control num-input"
+        placeholder="000" maxlength="3" inputmode="numeric"
+        oninput="onNumInput(this)">
+      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+        <span id="numFeedback" style="font-size:0.75rem;color:var(--muted)"></span>
+        <span id="limitFeedback" style="font-size:0.75rem"></span>
+      </div>
+    </div>
+
+    <!-- Montant -->
+    <div class="form-card">
+      <div class="form-card-title">Mitan (HTG)</div>
+      <input type="number" id="montantInput" class="form-control"
+        placeholder="ex: 50" min="1" inputmode="numeric">
+    </div>
+
+    <!-- Limit warning -->
+    <div class="limit-warning" id="limitWarn">
+      ⚠️ Nimewo sa rive nan limit li. Vant pa posib.
+    </div>
+
+    <button class="btn btn-gold btn-full" onclick="submitVant()" id="submitBtn">
+      🎟 Anrejistre Vant
+    </button>
+  </div>
+
+  <!-- ===== MES VANT ===== -->
+  <div id="sec-myvant" class="section fade-in">
+    <br>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-family:'Orbitron',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--muted)">VAN JO A</div>
+      <select class="filter-select" id="myDateFilter" onchange="loadMyVant()"
+        style="background:var(--card2);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:6px 10px;font-size:0.8rem;outline:none">
+        <option value="today">Jodi a</option>
+        <option value="week">Semèn sa</option>
+        <option value="all">Tout</option>
+      </select>
+    </div>
+
+    <div id="myVantList">
+      <div class="text-center text-muted" style="padding:30px">Ap chaje...</div>
+    </div>
+
+    <div class="card" style="margin-top:16px;padding:14px 16px">
+      <div style="display:flex;justify-content:space-between">
+        <div style="font-family:'Orbitron',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--muted)">TOTAL JOUNEN</div>
+        <div id="myTotal" style="font-family:'Orbitron',monospace;font-size:0.9rem;color:var(--gold)">HTG 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TIRAJ ===== -->
+  <div id="sec-tiraj" class="section fade-in">
+    <br>
+    <div id="tirajResults">
+      <div class="text-center text-muted" style="padding:30px">
+        Klike pou wè dènye rezilta
+      </div>
+    </div>
+    <button class="btn btn-gold btn-full mt-2" onclick="loadTirajAgent()">
+      🎰 Chaje Rezilta Tiraj
+    </button>
+  </div>
+
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../js/firebase-config.js"></script>
+<script>
+let currentUser = null;
+let userData = null;
+let currentPick = 3;
+let currentState = 'tennessee';
+let currentTiraj = '';
+let limitsCache = {};
+
+const TIRAJ_BY_STATE = {
+  tennessee: [
+    { key: 'morning', label: '🌅 Matin (10:00 AM)' },
+    { key: 'evening', label: '🌆 Swa (6:29 PM)' }
+  ],
+  georgia: [
+    { key: 'midday', label: '☀️ Midi (12:29 PM)' },
+    { key: 'evening', label: '🌆 Swa (6:59 PM)' }
+  ],
+  florida: [
+    { key: 'midday', label: '☀️ Midi (1:30 PM)' },
+    { key: 'evening', label: '🌆 Swa (9:45 PM)' }
+  ],
+  'new-york': [
+    { key: 'midday', label: '☀️ Midi (2:30 PM)' },
+    { key: 'evening', label: '🌆 Swa (10:30 PM)' }
+  ]
+};
+
+// ===== AUTH =====
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.href = '../index.html'; return; }
+  const role = await getUserRole(user.uid);
+  if (role !== 'agent') { window.location.href = '../index.html'; return; }
+  currentUser = user;
+  const doc = await db.collection('users').doc(user.uid).get();
+  userData = doc.data();
+  if (!userData.active) {
+    showToast('Kont ou dezaktive. Kontakte admin.', 'error');
+    await auth.signOut();
+    window.location.href = '../index.html';
+    return;
+  }
+  document.getElementById('agentNameTop').textContent = userData.name || '';
+  document.getElementById('agentShopTop').textContent = userData.shopName || '';
+  initAgent();
+});
+
+async function initAgent() {
+  renderTirajOptions();
+  loadDayLimit();
+  loadMyVant();
+  loadLimitsCache();
+}
+
+// ===== TABS =====
+function showTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'myvant') loadMyVant();
+}
+
+async function doLogout() {
+  await auth.signOut();
+  window.location.href = '../index.html';
+}
+
+// ===== PICK / STATE / TIRAJ =====
+function setPick(n) {
+  currentPick = n;
+  document.getElementById('pickBtn3').classList.toggle('active', n===3);
+  document.getElementById('pickBtn4').classList.toggle('active', n===4);
+  const inp = document.getElementById('numInput');
+  inp.maxLength = n;
+  inp.placeholder = n === 3 ? '000' : '0000';
+  inp.value = '';
+  document.getElementById('numFeedback').textContent = '';
+  checkLimit('');
+}
+
+function setState(state, btn) {
+  currentState = state;
+  currentTiraj = '';
+  document.querySelectorAll('.state-option').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTirajOptions();
+}
+
+function renderTirajOptions() {
+  const options = TIRAJ_BY_STATE[currentState] || [];
+  currentTiraj = options[0]?.key || '';
+  document.getElementById('tirajGrid').innerHTML = options.map((o,i) => `
+    <button class="tiraj-option ${i===0?'active':''}"
+      onclick="setTiraj('${o.key}',this)">${o.label}</button>
+  `).join('');
+}
+
+function setTiraj(key, btn) {
+  currentTiraj = key;
+  document.querySelectorAll('.tiraj-option').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ===== LIMITS CACHE =====
+async function loadLimitsCache() {
+  try {
+    const [doc3, doc4] = await Promise.all([
+      db.collection('config').doc('limits_pick3').get(),
+      db.collection('config').doc('limits_pick4').get()
+    ]);
+    limitsCache[3] = doc3.exists ? (doc3.data().limits || {}) : {};
+    limitsCache[4] = doc4.exists ? (doc4.data().limits || {}) : {};
+  } catch(e) {}
+}
+
+function getLimit(pick, num) {
+  const l = limitsCache[pick];
+  if (!l) return null;
+  return l[num] !== undefined ? l[num] : null;
+}
+
+// ===== NUMBER INPUT =====
+function onNumInput(inp) {
+  // Only digits
+  inp.value = inp.value.replace(/\D/g, '').slice(0, currentPick);
+  const num = inp.value;
+  const feedback = document.getElementById('numFeedback');
+  if (num.length === currentPick) {
+    feedback.textContent = `✓ Nimewo ${num} — Bon!`;
+    feedback.style.color = 'var(--green)';
+    checkLimit(num);
+  } else {
+    feedback.textContent = `${num.length}/${currentPick} chif`;
+    feedback.style.color = 'var(--muted)';
+    document.getElementById('limitWarn').classList.remove('show');
+    document.getElementById('limitFeedback').textContent = '';
+  }
+}
+
+async function checkLimit(num) {
+  const warn = document.getElementById('limitWarn');
+  const fb = document.getElementById('limitFeedback');
+  if (!num || num.length < currentPick) {
+    warn.classList.remove('show');
+    fb.textContent = '';
+    return;
+  }
+
+  const lim = getLimit(currentPick, num);
+  if (lim === null) {
+    fb.textContent = '∞ San limit';
+    fb.style.color = 'var(--muted)';
+    warn.classList.remove('show');
+    return;
+  }
+
+  // Count today's sales for this number
+  try {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const snap = await db.collection('vant')
+      .where('numeros', '==', num)
+      .where('pick', '==', currentPick)
+      .where('state', '==', currentState)
+      .where('tiraj', '==', currentTiraj)
+      .where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(today))
+      .get();
+
+    let sold = 0;
+    snap.forEach(d => sold += (d.data().montant || 0));
+    const remaining = lim - sold;
+
+    if (remaining <= 0) {
+      warn.classList.add('show');
+      fb.textContent = `⛔ Limit: ${lim} · Vann: ${sold}`;
+      fb.style.color = 'var(--danger)';
+    } else {
+      warn.classList.remove('show');
+      fb.textContent = `Limit: ${lim} · Disponib: ${remaining}`;
+      fb.style.color = remaining < lim * 0.2 ? 'var(--warn)' : 'var(--green)';
+    }
+  } catch(e) {
+    fb.textContent = '';
+  }
+}
+
+// ===== DAY LIMIT =====
+async function loadDayLimit() {
+  if (!userData?.dayLimit || userData.dayLimit === 0) return;
+
+  document.getElementById('limitBarWrap').style.display = 'block';
+  const today = new Date(); today.setHours(0,0,0,0);
+  try {
+    const snap = await db.collection('vant')
+      .where('agentId', '==', currentUser.uid)
+      .where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(today))
+      .get();
+    let total = 0;
+    snap.forEach(d => total += (d.data().montant || 0));
+    const pct = Math.min((total / userData.dayLimit) * 100, 100);
+    document.getElementById('limitBarVal').textContent = `HTG ${total.toLocaleString()} / ${userData.dayLimit.toLocaleString()}`;
+    const fill = document.getElementById('limitBarFill');
+    fill.style.width = pct + '%';
+    fill.className = 'progress-fill' + (pct > 90 ? ' danger' : pct > 70 ? ' warn' : '');
+  } catch(e) {}
+}
+
+// ===== SUBMIT VANT =====
+async function submitVant() {
+  const num = document.getElementById('numInput').value.trim();
+  const montant = parseFloat(document.getElementById('montantInput').value);
+  const btn = document.getElementById('submitBtn');
+
+  if (num.length !== currentPick) {
+    showToast(`Mete yon nimewo ${currentPick} chif`, 'warn'); return;
+  }
+  if (!currentTiraj) {
+    showToast('Chwazi yon tiraj', 'warn'); return;
+  }
+  if (!montant || montant <= 0) {
+    showToast('Mete mitan an', 'warn'); return;
+  }
+
+  // Check limit
+  const lim = getLimit(currentPick, num);
+  if (lim !== null) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const snap = await db.collection('vant')
+      .where('numeros','==',num).where('pick','==',currentPick)
+      .where('state','==',currentState).where('tiraj','==',currentTiraj)
+      .where('createdAt','>=',firebase.firestore.Timestamp.fromDate(today)).get();
+    let sold = 0;
+    snap.forEach(d => sold += (d.data().montant||0));
+    if (sold + montant > lim) {
+      showToast(`⛔ Limit ${num}: sèlman ${lim-sold} HTG restan`, 'error');
+      return;
+    }
+  }
+
+  // Check day limit
+  if (userData?.dayLimit > 0) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const snap = await db.collection('vant')
+      .where('agentId','==',currentUser.uid)
+      .where('createdAt','>=',firebase.firestore.Timestamp.fromDate(today)).get();
+    let total = 0;
+    snap.forEach(d => total += (d.data().montant||0));
+    if (total + montant > userData.dayLimit) {
+      showToast(`⛔ Limit jounen ou: sèlman HTG ${userData.dayLimit-total} restan`, 'error');
+      return;
+    }
+  }
+
+  btn.disabled = true; btn.textContent = '⟳ Ap anrejistre...';
+
+  try {
+    await db.collection('vant').add({
+      agentId: currentUser.uid,
+      agentName: userData.name,
+      shopName: userData.shopName || '',
+      numeros: num,
+      pick: currentPick,
+      state: currentState,
+      tiraj: currentTiraj,
+      montant: montant,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    showToast(`✅ Vant ${num} anrejistre!`, 'success');
+    document.getElementById('numInput').value = '';
+    document.getElementById('montantInput').value = '';
+    document.getElementById('numFeedback').textContent = '';
+    document.getElementById('limitFeedback').textContent = '';
+    document.getElementById('limitWarn').classList.remove('show');
+    loadDayLimit();
+
+  } catch(e) {
+    showToast('Erè: ' + e.message, 'error');
+  }
+
+  btn.disabled = false; btn.textContent = '🎟 Anrejistre Vant';
+}
+
+// ===== MY VANT =====
+async function loadMyVant() {
+  const container = document.getElementById('myVantList');
+  container.innerHTML = '<div class="text-center text-muted" style="padding:20px">Ap chaje...</div>';
+
+  const filter = document.getElementById('myDateFilter').value;
+  const today = new Date(); today.setHours(0,0,0,0);
+  let q = db.collection('vant').where('agentId','==',currentUser?.uid).orderBy('createdAt','desc');
+
+  if (filter === 'today') {
+    q = q.where('createdAt','>=',firebase.firestore.Timestamp.fromDate(today));
+  } else if (filter === 'week') {
+    const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate()-7);
+    q = q.where('createdAt','>=',firebase.firestore.Timestamp.fromDate(weekAgo));
+  }
+
+  try {
+    const snap = await q.limit(100).get();
+    let total = 0;
+
+    if (snap.empty) {
+      container.innerHTML = '<div class="text-center text-muted" style="padding:30px">Pa gen vant</div>';
+      document.getElementById('myTotal').textContent = 'HTG 0';
+      return;
+    }
+
+    const stateIcons = {'tennessee':'🎸','georgia':'🍑','florida':'🌴','new-york':'🗽'};
+    const tirajIco = {'morning':'🌅','midday':'☀️','evening':'🌆'};
+
+    container.innerHTML = snap.docs.map(doc => {
+      const d = doc.data();
+      total += (d.montant||0);
+      return `<div class="vant-item">
+        <div>
+          <div class="vant-nums">${d.numeros}</div>
+          <div class="vant-meta">
+            ${stateIcons[d.state]||''} ${d.state} ·
+            ${tirajIco[d.tiraj]||''} ${d.tiraj} ·
+            Pick ${d.pick} ·
+            ${formatDate(d.createdAt)} ${formatTime(d.createdAt)}
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:'Orbitron',monospace;color:var(--green);font-size:0.85rem">
+            HTG ${(d.montant||0).toLocaleString()}
+          </div>
+          <span class="badge badge-blue">Pick ${d.pick}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('myTotal').textContent = 'HTG ' + total.toLocaleString();
+  } catch(e) {
+    container.innerHTML = `<div class="text-center text-muted">Erè: ${e.message}</div>`;
+  }
+}
+
+// ===== TIRAJ AGENT =====
+async function loadTirajAgent() {
+  const container = document.getElementById('tirajResults');
+  container.innerHTML = '<div class="text-center" style="padding:20px"><span class="spin-anim">⟳</span> Ap chaje...</div>';
+
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 800,
+        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        system: "Return ONLY valid JSON, no markdown.",
+        messages: [{ role: "user",
+          content: `Latest Pick 3 and Pick 4 results for Tennessee (morning+evening), Georgia (midday+evening), Florida (midday+evening), New York (midday+evening). JSON format: {"results":[{"state":"Tennessee","draw":"Morning","pick3":["1","2","3"],"pick4":["1","2","3","4"],"date":"YYYY-MM-DD"}]}`
+        }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.filter(b=>b.type==='text').map(b=>b.text).join('')||'';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+
+    container.innerHTML = parsed.results.map(r => `
+      <div class="tiraj-card">
+        <div class="tiraj-card-header">
+          <strong style="font-family:'Orbitron',monospace;font-size:0.8rem">${r.state}</strong>
+          <span class="badge badge-muted">${r.draw}</span>
+        </div>
+        <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+          <div>
+            <div style="font-size:0.58rem;font-family:'Orbitron',monospace;color:var(--muted);letter-spacing:2px;margin-bottom:8px">PICK 3</div>
+            <div style="display:flex;gap:8px">${(r.pick3||[]).map((n,i)=>`<div class="ball ball-${['gold','blue','red'][i%3]}">${n}</div>`).join('')}</div>
+          </div>
+          <div>
+            <div style="font-size:0.58rem;font-family:'Orbitron',monospace;color:var(--muted);letter-spacing:2px;margin-bottom:8px">PICK 4</div>
+            <div style="display:flex;gap:8px">${(r.pick4||[]).map((n,i)=>`<div class="ball ball-${['green','gold','blue','red'][i%4]}">${n}</div>`).join('')}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    container.innerHTML = `<div class="text-center text-muted" style="padding:20px">Erè: ${e.message}</div>`;
+  }
+}
+</script>
+</body>
+</html>
