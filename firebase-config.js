@@ -1,7 +1,7 @@
 // ============================================================
 //  ME LOTTO — Firebase Configuration REYÈL
 // ============================================================
-const firebaseConfig = {
+const firebaseConfig.js = {
   apiKey: "AIzaSyC2Y808ya0xUJK_yRCLZ4y4bW1KutqctFg",
   authDomain: "me-lotto-d502d.firebaseapp.com",
   projectId: "me-lotto-d502d",
